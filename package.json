@@ -1,5 +1,5 @@
 {
-  "name": "@malchata/get-vitals",
+  "name": "get-vitals",
   "version": "0.1.0",
   "description": "A wrapper around Google's web-vitals package to simplify collection and transmission of web vitals to an endpoint.",
   "main": "dist/get-vitals.cjs.js",

@@ -14,7 +14,7 @@ I originally wrote this as part of the codebase for my personal website, but dec
 
 To use `get-vitals` in your app, install it along the `web-vitals` package via npm as production dependencies:
 
-`npm install @malchata/get-vitals web-vitals --save`
+`npm install get-vitals web-vitals --save`
 
 The `web-vitals` package is marked as external in this package. The reason for this is to avoid shipping a copy of the `web-vitals` package for flexibility. This may change in a future release.
 
@@ -23,7 +23,7 @@ The `web-vitals` package is marked as external in this package. The reason for t
 Using `get-vitals` is designed to be as straightforward as it can possibly be:
 
 ```javascript
-import { getVitals } from "@malchata/get-vitals";
+import { getVitals } from "get-vitals";
 
 window.addEventListener("load", () => {
   getVitals("https://metrics.compuhyperglobalmega.net/collect");
