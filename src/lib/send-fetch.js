@@ -1,9 +1,9 @@
-import urgentIdleCallback from "./urgent-idle-callback.js";
+import { urgentIdleCallback } from "./urgent-idle-callback.js";
 
-export default function (endpoint, metrics) {
-  const callback = () => {
+export function sendFetch (endpoint, body) {
+  urgentIdleCallback(window, "pagehide", () => {
     fetch(endpoint, {
-      body: JSON.stringify(metrics),
+      body,
       method: "POST",
       keepalive: true,
       mode: "cors",
@@ -11,7 +11,5 @@ export default function (endpoint, metrics) {
         "Content-Type": "application/json"
       }
     });
-  };
-
-  urgentIdleCallback(window, "pagehide", callback);
+  });
 }

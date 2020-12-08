@@ -1,13 +1,14 @@
 {
   "name": "get-vitals",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A wrapper around Google's web-vitals package to simplify collection and transmission of web vitals to an endpoint.",
-  "main": "dist/get-vitals.cjs.js",
-  "module": "dist/get-vitals.es.mjs",
-  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "scripts": {
-    "build": "npx rollup -c",
-    "lint": "npx eslint"
+    "clean": "rm -rf ./dist",
+    "build": "npm run clean && npx rollup -c",
+    "dev": "npx rollup -c -w",
+    "lint": "npx eslint ./src/**/*.js"
   },
   "author": "Jeremy L. Wagner <jeremy@jeremy.codes>",
   "license": "MIT",
@@ -16,12 +17,15 @@
     "url": "git+https://github.com/malchata/get-vitals.git"
   },
   "devDependencies": {
-    "eslint": "^7.14.0",
-    "rollup": "^2.34.1",
-    "web-vitals": "^1.0.1",
-    "whatwg-fetch": "^3.5.0"
+    "@rollup/plugin-node-resolve": "^11.0.0",
+    "eslint": "^7.15.0",
+    "rollup": "^2.34.2"
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "web-vitals": "^1.0.1",
+    "whatwg-fetch": "^3.5.0"
+  }
 }

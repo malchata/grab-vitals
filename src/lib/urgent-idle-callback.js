@@ -1,6 +1,6 @@
 import { REQUESTIDLECALLBACK_SUPPORTED } from "./constants.js";
 
-export default function (eventOwner, eventString, idleCallback) {
+export function urgentIdleCallback (eventOwner, eventString, idleCallback) {
   if (REQUESTIDLECALLBACK_SUPPORTED) {
     let idleCallbackRan = false;
     const idleCallbackHandle = requestIdleCallback(() => {
@@ -17,6 +17,8 @@ export default function (eventOwner, eventString, idleCallback) {
       if (!idleCallbackRan) {
         cancelIdleCallback(idleCallbackHandle);
       }
+
+      idleCallback();
     }, {
       once: true
     });

@@ -1,11 +1,10 @@
 /* eslint-env node */
-import pkg from "./package.json";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 
 const commonConfig = {
   input: "src/index.js",
-  external: [
-    "web-vitals",
-    "whatwg-fetch"
+  plugins: [
+    nodeResolve()
   ]
 };
 
@@ -13,16 +12,20 @@ export default [
   // CommonJS build
   {
     output: {
-      file: pkg.main,
-      format: "cjs"
+      dir: "./dist",
+      format: "cjs",
+      entryFileNames: "[name].js",
+      chunkFileNames: "[name].js"
     },
     ...commonConfig
   },
   // ES6 Build
   {
     output: {
-      file: pkg.module,
-      format: "esm"
+      dir: "./dist",
+      format: "esm",
+      entryFileNames: "[name].mjs",
+      chunkFileNames: "[name].mjs"
     },
     ...commonConfig
   }

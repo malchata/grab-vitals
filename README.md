@@ -16,11 +16,11 @@ To use `get-vitals` in your app, install it along the `web-vitals` package via n
 
 `npm install get-vitals web-vitals --save`
 
-The `web-vitals` package is marked as external in this package. The reason for this is to avoid shipping a copy of the `web-vitals` package for flexibility. This may change in a future release.
+The `web-vitals` package is bundled with this package. If you're using `web-vitals` already in your own code, uninstalling that dependency from your project and let this package handle reporting entirely for you. Otherwise, you may end up shipping two copies of `web-vitals`.
 
 ## Basic usage
 
-Using `get-vitals` is designed to be as straightforward as it can possibly be:
+The simplest usage of `get-vitals` looks something like this:
 
 ```javascript
 import { getVitals } from "get-vitals";
@@ -30,28 +30,34 @@ window.addEventListener("load", () => {
 });
 ```
 
-In this example, `get-vitals` will pack all the metrics that `get-vitals` provides into an array of objects after the page `load` event fires. Each object in the array has the following shape:
+In this example, `get-vitals` will pack all the metrics that `get-vitals` provides into an object after the page `load` event fires. This object has the following shape:
 
 ```javascript
 {
   pathName,
-  metric,
-  value
+  metrics: [
+    {
+      time,
+      metric,
+      value
+    },
+    // ...
+  ]
 }
 ```
 
-`pathName` contains the value of `document.location.pathName`, `metric` is a string of the metric name (e.g., `"cls"`, `"fid"`, _et. al_), and `value` is, well, the _value_ of the metric.
+`pathName` contains the value of `document.location.pathName`. `metrics` is an array of objects containing info on each metric. `time` contains the value of [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now), `metric` is a string containing the metric name (e.g., `"cls"`, `"fid"`, _et. al_), and `value` is metric's value.
 
-Once all metrics are collected, the array of objects is converted to a JSON string and sent as a POST request to the endpoint passed to the `getVitals` function. From there, it's up to you to write a back end that decodes that JSON (e.g., like PHP's [`json_decode`](https://www.php.net/json_decode)) and stores it somewhere for later analysis.
+Once all metrics are collected, the object is converted to a JSON string and sent as a POST request to the endpoint passed to the `getVitals` function. From there, it's up to you to write a back end that decodes that JSON (e.g., like PHP's [`json_decode`](https://www.php.net/json_decode)) and stores it somewhere for later analysis.
 
 ## Advanced usage
 
 The `getVitals` function takes the following arguments in the order in which they're listed:
 
-- `endpoint` (`String`): The endpoint where a POST request containing the metrics will be sent.
-- `additionalMetrics` (`Array`): Additional metrics to transmit along with web vitals. Read on to see an example of this. Default: `[]`.
-- `preferBeacon` (`Boolean`): Whether to prefer [`navigator.sendBeacon`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) over [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). `sendBeacon` is much more passive than a fetch, but may fail to fire for a number of good reasons based on browser heuristics. Don't change this unless capturing anything less than 100% is flat-out unacceptable. Default: `true`.
-- `polyfillFetch` (`Boolean`): Whether to polyfill the fetch API. If you do this, you'll need to install the [`whatwg-fetch` package](https://www.npmjs.com/package/whatwg-fetch) as a production dependency in your project if you set this to `true`. If `false`, you'll either need to polyfill `fetch` some other way, or accept that metrics won't be transmitted in browsers that don't support either `fetch` or `sendBeacon`.
+- `endpoint` (`String`): Required. The endpoint where a POST request containing the metrics will be sent. _Default: `undefined`._
+- `additionalMetrics` (`Array`): Optional. Additional metrics to transmit along with web vitals. Read on to see an example of this. _Default: `[]`._
+- `preferBeacon` (`Boolean`): Optional. Whether to prefer [`navigator.sendBeacon`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) over [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). `sendBeacon` is much more passive than a fetch, but may fail to fire for a number of good reasons based on browser heuristics. Don't change this unless capturing anything less than 100% is flat-out unacceptable. _Default: `true`._
+- `polyfillFetch` (`Boolean`): Optional. Whether to polyfill the fetch API. If `false`, you'll either need to polyfill `fetch` some other way, or accept that metrics won't be transmitted in browsers that don't support either `fetch` or `sendBeacon`. _Default: `false`._
 
 Aside from toggling `preferBeacon` or `polyfillFetch` one way or the other, the only advanced use case is supplying your own metrics, which is where `additionalMetrics` comes in. Let's have a look at what that might look like.
 
@@ -81,9 +87,7 @@ Using this format, we `push` some [netinfo metrics](https://developer.mozilla.or
 import { getAdditionalMetrics } from "./get-additional-metrics.js";
 
 window.addEventListener("load", () => {
-  const additionalMetrics = getAdditionalMetrics();
-
-  getVitals(RUM_ENDPOINT, additionalMetrics);
+  getVitals("https://metrics.compuhyperglobalmega.net/collect", getAdditionalMetrics());
 });
 ```
 
@@ -102,11 +106,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   // Decode the JSON into something PHP can work with.
   $data = json_decode($json);
 
-  foreach ($data as $metric) {
+  foreach ($data->metrics as $metric) {
     // Process and store metrics here. Access object members like so:
-    echo $metric->pathName;  // The path to the page where collection happened.
-    echo $metric->name;      // The string name of the metric (e.g., "cls").
-    echo $metric->value;     // The value of the associated metric (e.g., 22).
+    echo $metric->time;      // The time elapsed since the time origin.
+    echo $metric->name;      // The string name of the metric (e.g., "FID").
+    echo $metric->value;     // The value of the associated metric (e.g., 22.3).
   }
 }
 ?>
