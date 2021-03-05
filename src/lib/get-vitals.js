@@ -13,8 +13,10 @@ export function getVitals (endpoint, additionalMetrics = [], preferBeacon = true
   const maxMetrics = [CLS_SUPPORTED, FCP_SUPPORTED, FID_SUPPORTED, LCP_SUPPORTED, TTFB_SUPPORTED].filter(supported => supported).length;
   const vitals = [];
   const sendCallback = () => {
-    reportMetrics(vitals, additionalMetrics, endpoint, preferBeacon, polyfillFetch);
-    sent = true;
+    if (!sent) {
+      reportMetrics(vitals, additionalMetrics, endpoint, preferBeacon, polyfillFetch);
+      sent = true;
+    }
   };
 
   // This callback fires if all metrics are collected before the user navigates
@@ -22,42 +24,29 @@ export function getVitals (endpoint, additionalMetrics = [], preferBeacon = true
   const pushMetric = ({ name, value }) => {
     vitals.push(createMetric(name, value));
 
-    if (vitals.length === maxMetrics && !sent) {
+    if (vitals.length === maxMetrics) {
       sendCallback();
     }
   };
-
-  // The callback that gets sent if the user tries to navigate away from the
-  // current page/hides the tab
-  const lastDitchCallback = () => {
-    if (!sent) {
-      sendCallback();
-    }
-  };
-
-  // Cribbed this pattern from @treosh's similar web-vitals-reporter package. If
-  // you're looking for alternatives to this package, consider checking his out!
-  // https://github.com/treosh/web-vitals-reporter/blob/master/src/index.js#L72-L88
-  if (CLS_SUPPORTED) {
-    window.addEventListener("visibilitychange", () => {
-      if (document.visibilitystate === "hidden") {
-        lastDitchCallback();
-      }
-    }, {
-      once: true
-    });
-  } else {
-    window.addEventListener("pagehide", lastDitchCallback, {
-      capture: true,
-      once: true
-    });
-  }
 
   if (CLS_SUPPORTED) {
     // webpack doesn't name chunks by default. The inline directive used below
     // just gives it a nice display name if the downstream bundler is webpack.
     import(/* webpackChunkName: "get-cls" */ "web-vitals/dist/modules/getCLS.js").then(({ getCLS }) => {
       getCLS(pushMetric);
+    });
+
+    window.addEventListener("visibilitychange", () => {
+      if (document.visibilitystate === "hidden") {
+        sendCallback();
+      }
+    }, {
+      once: true
+    });
+  } else {
+    window.addEventListener("pagehide", sendCallback, {
+      capture: true,
+      once: true
     });
   }
 

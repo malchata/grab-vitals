@@ -17,15 +17,15 @@
     "url": "git+https://github.com/malchata/get-vitals.git"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^11.0.1",
-    "eslint": "^7.16.0",
-    "rollup": "^2.35.1"
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "eslint": "^7.21.0",
+    "rollup": "^2.40.0"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
-    "web-vitals": "^1.0.1",
-    "whatwg-fetch": "^3.5.0"
+    "web-vitals": "^1.1.0",
+    "whatwg-fetch": "^3.6.2"
   }
 }

@@ -3,6 +3,7 @@ import { REQUESTIDLECALLBACK_SUPPORTED } from "./constants.js";
 export function urgentIdleCallback (eventOwner, eventString, idleCallback) {
   if (REQUESTIDLECALLBACK_SUPPORTED) {
     let idleCallbackRan = false;
+
     const idleCallbackHandle = requestIdleCallback(() => {
       idleCallback();
 
