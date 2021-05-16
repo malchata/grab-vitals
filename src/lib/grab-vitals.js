@@ -6,7 +6,7 @@ import { CLS_SUPPORTED, FCP_SUPPORTED, FID_SUPPORTED, LCP_SUPPORTED, TTFB_SUPPOR
 import { createMetric } from "./create-metric.js";
 import { reportMetrics } from "./report-metrics.js";
 
-export function getVitals (endpoint, additionalMetrics = [], preferBeacon = true, polyfillFetch = false) {
+export function grabVitals (endpoint, additionalMetrics = [], preferBeacon = true, polyfillFetch = false) {
   // We only want to send a request once.
   let sent = false;
 

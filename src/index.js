@@ -1,1 +1,1 @@
-export { getVitals } from "./lib/get-vitals.js";
+export { grabVitals } from "./lib/grab-vitals.js";
