@@ -6,7 +6,11 @@ const app = express();
 const htdocs = path.join(__dirname, "test");
 
 // Run static server
-app.use(express.static(htdocs));
+app.use(express.static(htdocs, {
+  setHeaders: function (res) {
+    res.set("Access-Control-Allow-Origin", "*");
+  }
+}));
 app.listen(8080);
 
 console.log("Lazy loading tests up and running at http://localhost:8080/");

@@ -1,20 +1,21 @@
 // Vendors
-import { getTTFB } from "web-vitals";
+import { getCLS, getFCP, getFID, getLCP, getTTFB } from "web-vitals";
 
 // Package-specific
-import { CLS_SUPPORTED, FCP_SUPPORTED, FID_SUPPORTED, LCP_SUPPORTED, TTFB_SUPPORTED } from "./constants.js";
+import { CLS_SUPPORTED, FCP_SUPPORTED, FID_SUPPORTED, LCP_SUPPORTED, TTFB_SUPPORTED, LONGTASKS_SUPPORTED } from "./constants.js";
 import { createMetric } from "./create-metric.js";
 import { reportMetrics } from "./report-metrics.js";
 
-export function grabVitals (endpoint, additionalMetrics = [], preferBeacon = true, polyfillFetch = false) {
+export function grabVitals (endpoint, additionalMetrics = []) {
   // We only want to send a request once.
   let sent = false;
 
   const maxMetrics = [CLS_SUPPORTED, FCP_SUPPORTED, FID_SUPPORTED, LCP_SUPPORTED, TTFB_SUPPORTED].filter(supported => supported).length;
   const vitals = [];
+  const longTasks = [];
   const sendCallback = () => {
     if (!sent) {
-      reportMetrics(vitals, additionalMetrics, endpoint, preferBeacon, polyfillFetch);
+      reportMetrics(vitals, additionalMetrics, longTasks, endpoint);
       sent = true;
     }
   };
@@ -22,6 +23,22 @@ export function grabVitals (endpoint, additionalMetrics = [], preferBeacon = tru
   // This callback fires if all metrics are collected before the user navigates
   // away from the current page (i.e., the best-case scenario).
   const pushMetric = ({ name, value }) => {
+    if (name === "FID" && LONGTASKS_SUPPORTED) {
+      // FID needs context. So we're going to look at long tasks!
+      const longTaskObserver = new PerformanceObserver(list => {
+        const longTasks = list.getEntries();
+
+        for (var i = 0; i < longTasks.length; i++) {
+          console.dir(longTasks[i]);
+        }
+      });
+
+      longTaskObserver.observe({
+        type: "longtask",
+        buffered: true
+      });
+    }
+
     vitals.push(createMetric(name, value));
 
     if (vitals.length === maxMetrics) {
@@ -30,11 +47,7 @@ export function grabVitals (endpoint, additionalMetrics = [], preferBeacon = tru
   };
 
   if (CLS_SUPPORTED) {
-    // webpack doesn't name chunks by default. The inline directive used below
-    // just gives it a nice display name if the downstream bundler is webpack.
-    import(/* webpackChunkName: "get-cls" */ "web-vitals/dist/modules/getCLS.js").then(({ getCLS }) => {
-      getCLS(pushMetric);
-    });
+    getCLS(pushMetric);
 
     window.addEventListener("visibilitychange", () => {
       if (document.visibilitystate === "hidden") {
@@ -51,22 +64,18 @@ export function grabVitals (endpoint, additionalMetrics = [], preferBeacon = tru
   }
 
   if (FCP_SUPPORTED) {
-    import(/* webpackChunkName: "get-fcp" */ "web-vitals/dist/modules/getFCP.js").then(({ getFCP }) => {
-      getFCP(pushMetric);
-    });
+    getFCP(pushMetric);
   }
 
   if (FID_SUPPORTED) {
-    import(/* webpackChunkName: "get-fid" */ "web-vitals/dist/modules/getFID.js").then(({ getFID }) => {
-      getFID(pushMetric);
-    });
+    getFID(pushMetric);
   }
 
   if (LCP_SUPPORTED) {
-    import(/* webpackChunkName: "get-lcp" */ "web-vitals/dist/modules/getLCP.js").then(({ getLCP }) => {
-      getLCP(pushMetric);
-    });
+    getLCP(pushMetric);
   }
 
-  getTTFB(pushMetric);
+  if (TTFB_SUPPORTED) {
+    getTTFB(pushMetric);
+  }
 }
