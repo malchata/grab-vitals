@@ -1,28 +1,47 @@
-import { SENDBEACON_SUPPORTED } from "./constants.js";
+import { SENDBEACON_SUPPORTED, LONGTASKS_SUPPORTED } from "./constants.js";
 
-export function reportMetrics (vitals, additionalMetrics, endpoint, preferFetch = true) {
-  const payload = {
-    pathName: document.location.pathname,
-    metrics: vitals
-  };
+export function reportMetrics (vitals, additionalMetrics, endpoint, getFIDLongTasks, longTaskWindow) {
+  if (SENDBEACON_SUPPORTED) {
+    const beaconCallback = () => {
+      const payload = {
+        pathName: document.location.pathname,
+        metrics: vitals
+      };
 
-  if (typeof additionalMetrics !== "undefined") {
-    payload.additionalMetrics = additionalMetrics;
-  }
-
-  const body = JSON.stringify(payload);
-
-  if (SENDBEACON_SUPPORTED && !preferFetch) {
-    navigator.sendBeacon(endpoint, body);
-  } else {
-    fetch(endpoint, {
-      body,
-      method: "POST",
-      keepalive: true,
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json"
+      if (typeof additionalMetrics !== "undefined") {
+        payload.additionalMetrics = additionalMetrics;
       }
-    });
+
+      navigator.sendBeacon(endpoint, JSON.stringify(payload));
+    };
+
+    if (getFIDLongTasks && LONGTASKS_SUPPORTED) {
+      for (const vitalIndex in vitals) {
+        if (vitals[vitalIndex].name === "FID") {
+          const minWindow = vitals[vitalIndex].time - (longTaskWindow / 2);
+          const maxWindow = vitals[vitalIndex].time + (longTaskWindow / 2);
+
+          const longTaskObserver = new PerformanceObserver((list, observer) => {
+            vitals[vitalIndex].longTasks = list.getEntries().filter(longTask => {
+              return longTask.startTime >= minWindow && longTask.startTime <= maxWindow;
+            });
+
+            observer.disconnect();
+            beaconCallback();
+          });
+
+          longTaskObserver.observe({
+            type: "longtask",
+            buffered: true
+          });
+
+          break;
+        }
+      }
+
+      return;
+    }
+
+    beaconCallback();
   }
 }

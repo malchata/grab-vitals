@@ -1,4 +1,5 @@
-export const PERF_OBSERVER_SUPPORTED = "PerformanceObserver" in window;
+const PERF_OBSERVER_SUPPORTED = "PerformanceObserver" in window;
+
 export const SENDBEACON_SUPPORTED = "sendBeacon" in navigator;
 export const CLS_SUPPORTED = PERF_OBSERVER_SUPPORTED && PerformanceObserver.supportedEntryTypes.includes("layout-shift");
 export const FCP_SUPPORTED = PERF_OBSERVER_SUPPORTED && PerformanceObserver.supportedEntryTypes.includes("paint");
