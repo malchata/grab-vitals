@@ -105,6 +105,7 @@ Once metrics start arriving at your designated endpoint, you need to decode the 
 
 ```php
 <?php
+// Make sure this is a POST request
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   // Takes raw data from the request.
   $json = file_get_contents("php://input");
